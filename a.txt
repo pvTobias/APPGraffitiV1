@@ -1,0 +1,2139 @@
+necesito que me ayudes para hacer mi backend en firebase sobre una app de tienda de ropa deportiva,necesito que me digas paso a paso como iniciar en la pagina de firebase,ademas yo tengo un proyecto ya hecho en el cual deberia cambiarse los datos para que quede como la tienda de ropa deportiva y si es necesario de crear nuevas cosas crearlas:
+
+en la carpeta config tengo el archivo FireBaseConfig.js:
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+import { getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+  authDomain: "backyosoytierraapp.firebaseapp.com",
+  projectId: "backyosoytierraapp",
+  storageBucket: "backyosoytierraapp.appspot.com",
+  messagingSenderId: "1081878468779",
+  appId: "1:1081878468779:web:a5ebc30c9f6c0ab0f13fee",
+  measurementId: "G-XNT839GNXD"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+
+export const db = getFirestore(app)
+// const analytics = getAnalytics(app);
+export const auth = getAuth(app);
+
+en la carpeta views tengo varios archivos:
+AddProduct.js:
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Alert, ScrollView } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { Ionicons } from '@expo/vector-icons';
+import { db } from '../config/FireBaseConfig'; // Asegúrate de tener configurado Firebase
+import { collection, addDoc } from 'firebase/firestore';
+
+const AddProduct = ({ navigation }) => {
+  const [image, setImage] = useState(null);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [price, setPrice] = useState('');
+  const [about, setAbout] = useState('');
+  const [category, setCategory] = useState('');
+
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  const handleAddProduct = async () => {
+    if (title && description && price && image && about && category) {
+      try {
+        const productData = {
+          name: title,
+          description: description,
+          price: price,
+          imageUrl: image, // Image URL obtenido del picker
+          about: about,
+          category: category,
+        };
+
+        await addDoc(collection(db, 'Sliders'), productData);
+        Alert.alert('Producto agregado', 'El producto se ha agregado correctamente.');
+        navigation.goBack();
+      } catch (error) {
+        console.error('Error al agregar producto:', error);
+        Alert.alert('Error', 'Hubo un problema al agregar el producto.');
+      }
+    } else {
+      Alert.alert('Error', 'Por favor, completa todos los campos.');
+    }
+  };
+
+  return (
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <View style={styles.container}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
+          <Ionicons name="chevron-back-outline" size={24} color="black" />
+        </TouchableOpacity>
+        <View style={styles.products}>
+          <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
+            {image ? (
+              <Image source={{ uri: image }} style={styles.productImage} />
+            ) : (
+              <Text style={styles.imagePickerText}>Seleccionar Imagen</Text>
+            )}
+          </TouchableOpacity>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Título del Producto"
+            placeholderTextColor="#888"
+            value={title}
+            onChangeText={setTitle}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Descripción del Producto"
+            placeholderTextColor="#888"
+            value={description}
+            onChangeText={setDescription}
+            multiline
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Precio del Producto"
+            placeholderTextColor="#888"
+            value={price}
+            onChangeText={setPrice}
+            keyboardType="numeric"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Acerca del Producto (About)"
+            placeholderTextColor="#888"
+            value={about}
+            onChangeText={setAbout}
+            multiline
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Categoría del Producto"
+            placeholderTextColor="#888"
+            value={category}
+            onChangeText={setCategory}
+          />
+
+          <TouchableOpacity style={styles.addButton} onPress={handleAddProduct}>
+            <Text style={styles.addButtonText}>Agregar Producto</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </ScrollView>
+  );
+};
+
+const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  container: {
+    flex: 1,
+    width: '100%',
+    padding: 20,
+    backgroundColor: '#2D2D2D',
+  },
+  iconButton: {
+    backgroundColor: '#E6E6E6',
+    padding: 10,
+    borderRadius: 10,
+    width: 40, 
+    height: 40, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    marginTop: 20,
+  },
+  imagePicker: {
+    backgroundColor: '#3C3C3C',
+    borderRadius: 10,
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    marginTop: 50,
+  },
+  imagePickerText: {
+    color: '#aaa',
+  },
+  productImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 10,
+  },
+  input: {
+    backgroundColor: '#3C3C3C',
+    color: '#fff',
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 15,
+    width: '100%',
+  },
+  addButton: {
+    padding: 15,
+    backgroundColor: '#8B6A60',
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  addButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+});
+
+export default AddProduct;
+
+AdminHome.js:
+import React, { useEffect, useState } from 'react';
+import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../config/FireBaseConfig';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
+
+const Home = ({ navigation }) => {
+  const [selectedTab, setSelectedTab] = useState('Popular'); // Pestaña por defecto
+  const [sliderList, setSliderList] = useState([]);
+  const [categoryList, setCategoryList] = useState([]);
+  const [darkModeEnabled, setDarkModeEnabled] = useState(true); // Default oscuro
+
+  // Cargar las categorías desde Firestore
+  useEffect(() => {
+    GetCategories();
+  }, []);
+
+  const GetCategories = async () => {
+    const snapshot = await getDocs(collection(db, 'Categorias'));
+    const categories = [];
+    snapshot.forEach((doc) => {
+      categories.push(doc.data());
+    });
+    setCategoryList(categories);
+  };
+
+  // Función para cargar sliders de una categoría específica
+  const GetSliders = async (category) => {
+    const q = query(collection(db, 'Sliders'), where('category', '==', category)); 
+    const snapshot = await getDocs(q);
+    const sliders = [];
+    snapshot.forEach((doc) => {
+      sliders.push({ ...doc.data(), id: doc.id });
+    });
+    setSliderList(sliders);
+  };
+
+  // Cargar sliders según la categoría seleccionada
+  useEffect(() => {
+    GetSliders(selectedTab);
+  }, [selectedTab]);
+
+  // Recuperar el estado del modo oscuro desde AsyncStorage cada vez que la pantalla sea enfocada
+  useFocusEffect(
+    React.useCallback(() => {
+      const getDarkModePreference = async () => {
+        try {
+          const savedDarkMode = await AsyncStorage.getItem('darkMode');
+          if (savedDarkMode !== null) {
+            setDarkModeEnabled(JSON.parse(savedDarkMode));
+          }
+        } catch (error) {
+          console.error('Error al recuperar el modo oscuro/claro: ', error);
+        }
+      };
+
+      getDarkModePreference();
+    }, [])
+  );
+
+  // Renderizar el contenido de los productos
+  const renderContent = () => {
+    return (
+      <View style={styles.products}>
+        {sliderList.map((item, index) => (
+          <View key={index} style={[styles.productCard, darkModeEnabled ? styles.darkProductCard : styles.lightProductCard]}>
+            <Image
+              style={styles.productImage}
+              source={{ uri: item.imageUrl }}
+            />
+            <Text style={[styles.productName, darkModeEnabled ? styles.darkText : styles.lightText]}>{item.name}</Text>
+            <Text style={[styles.productDesc, darkModeEnabled ? styles.darkText : styles.lightText]}>{item.description}</Text>
+            <Text style={[styles.productPrice, darkModeEnabled ? styles.darkText : styles.lightText]}>${item.price}</Text>
+            <TouchableOpacity
+              style={[styles.cartButton, darkModeEnabled ? styles.darkCartButton : styles.lightCartButton]}
+              onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}
+            >
+              <Text style={darkModeEnabled ? styles.darkCartText : styles.lightCartText}>🛒</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+      </View>
+    );
+  };
+
+  return (
+    <ScrollView style={[styles.container, darkModeEnabled ? styles.darkContainer : styles.lightContainer]}>
+      <View style={[styles.header, darkModeEnabled ? styles.darkHeader : styles.lightHeader]}>
+        <View style={styles.headerTop}>
+          <TouchableOpacity
+            style={[styles.iconButton, !darkModeEnabled && styles.lightIconButton]}
+            onPress={() => navigation.navigate('Settings')}
+          >
+            <Ionicons name="settings-outline" size={24} color={darkModeEnabled ? "black" : "black"} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.iconButton, !darkModeEnabled && styles.lightIconButton]}
+            onPress={() => navigation.navigate('Cart')}
+          >
+            <Ionicons name="cart-outline" size={24} color={darkModeEnabled ? "black" : "black"} />
+          </TouchableOpacity>
+        </View>
+        <Image style={styles.headerImage} source={require('../assets/banner.jpeg')} />
+      </View>
+
+      {/* Renderizado del menú dinámico */}
+      <View style={styles.menu}>
+        {categoryList.map((category, index) => (
+          <TouchableOpacity
+            key={index}
+            style={[styles.menuButton, selectedTab === category.name && styles.activeButton, darkModeEnabled ? styles.darkCategoryButton : styles.lightCategoryButton]}
+            onPress={() => setSelectedTab(category.name)}
+          >
+            <Text style={darkModeEnabled ? styles.darkText : styles.lightText}>{category.name}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {renderContent()}
+
+      {/* Botón para agregar nuevo producto */}
+      <TouchableOpacity
+        style={[styles.addButton, darkModeEnabled ? styles.darkAddButton : styles.lightAddButton]}
+        onPress={() => navigation.navigate('AddProduct')}
+      >
+        <Text style={darkModeEnabled ? styles.darkAddText : styles.lightAddText}>Agregar Producto</Text>
+      </TouchableOpacity>
+    </ScrollView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  darkContainer: {
+    backgroundColor: '#2D2D2D',
+  },
+  lightContainer: {
+    backgroundColor: '#fff',
+  },
+  header: {
+    height: 240,
+    position: 'relative',
+  },
+  darkHeader: {
+    backgroundColor: '#333',
+  },
+  lightHeader: {
+    backgroundColor: '#f5f5f5',
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    marginTop: 50,
+    zIndex: 10,
+  },
+  iconButton: {
+    backgroundColor: '#E6E6E6',
+    padding: 10,
+    borderRadius: 10,
+  },
+  lightIconButton: {
+    backgroundColor: '#fff',
+  },
+  headerImage: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    zIndex: 1,
+  },
+  menu: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  menuButton: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 5,
+    marginHorizontal: 5,
+    alignItems: 'center',
+  },
+  darkCategoryButton: {
+    backgroundColor: '#8B6A60',
+  },
+  lightCategoryButton: {
+    backgroundColor: '#f0f0f0',
+    borderColor: '#ccc',
+    borderWidth: 1,
+  },
+  activeButton: {
+    backgroundColor: '#2D2C2B',
+    borderWidth: 1,
+    borderColor: '#8B6A60',
+  },
+  products: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-around',
+    padding: 10,
+  },
+  productCard: {
+    width: '45%',
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 15,
+  },
+  darkProductCard: {
+    backgroundColor: '#3C3C3C',
+  },
+  lightProductCard: {
+    backgroundColor: '#f9f9f9',
+  },
+  productImage: {
+    width: '100%',
+    height: 150,
+    borderRadius: 10,
+  },
+  productName: {
+    fontWeight: 'bold',
+    marginTop: 10,
+  },
+  darkText: {
+    color: '#fff',
+  },
+  lightText: {
+    color: '#333',
+  },
+  productDesc: {
+    marginTop: 5,
+  },
+  productPrice: {
+    fontWeight: 'bold',
+    marginTop: 5,
+  },
+  cartButton: {
+    marginTop: 10,
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  darkCartButton: {
+    backgroundColor: '#8B6A60',
+  },
+  lightCartButton: {
+    backgroundColor: '#f0f0f0',
+    borderColor: '#ccc',
+    borderWidth: 1,
+  },
+  darkCartText: {
+    color: '#fff',
+  },
+  lightCartText: {
+    color: '#333',
+  },
+  addButton: {
+    marginVertical: 20,
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginHorizontal: 20,
+  },
+  darkAddButton: {
+    backgroundColor: '#8B6A60',
+  },
+  lightAddButton: {
+    backgroundColor: '#f0f0f0',
+    borderColor: '#ccc',
+    borderWidth: 1,
+  },
+  darkAddText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  lightAddText: {
+    color: '#333',
+    fontWeight: 'bold',
+  },
+});
+
+export default Home;
+
+AdminOrderHistory.js:
+import React from 'react';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+
+const orderHistory = [
+  { id: '1', customerName: 'Juan Pérez', totalAmount: '$120', date: '2024-08-25', status: 'Completado' },
+  { id: '2', customerName: 'Ana García', totalAmount: '$75', date: '2024-08-26', status: 'En proceso' },
+  { id: '3', customerName: 'Carlos López', totalAmount: '$50', date: '2024-08-27', status: 'Cancelado' },
+  // Puedes agregar más pedidos aquí
+];
+
+const AdminOrderHistory = ({ navigation }) => {
+  const renderItem = ({ item }) => (
+    <View style={styles.orderItem}>
+      <Text style={styles.orderText}>Cliente: {item.customerName}</Text>
+      <Text style={styles.orderText}>Fecha: {item.date}</Text>
+      <Text style={styles.orderText}>Total: {item.totalAmount}</Text>
+      <Text style={styles.orderText}>Estado: {item.status}</Text>
+      <TouchableOpacity style={styles.detailsButton}>
+        <Text style={styles.detailsButtonText}>Ver Detalles</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Historial de Pedidos</Text>
+      <FlatList
+        data={orderHistory}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContainer}
+      />
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#2D2D2D',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 20,
+  },
+  listContainer: {
+    paddingBottom: 20,
+  },
+  orderItem: {
+    backgroundColor: '#3C3C3C',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 15,
+  },
+  orderText: {
+    color: '#fff',
+    marginBottom: 5,
+  },
+  detailsButton: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: '#8B6A60',
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  detailsButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+});
+
+export default AdminOrderHistory;
+
+Cart.js:
+import React, { useEffect, useState } from 'react';
+import { View, Text, Image, FlatList, ActivityIndicator, Alert, StyleSheet, TouchableOpacity, Linking } from 'react-native';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
+import { db } from '../config/FireBaseConfig';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const Cart = () => {
+  const [items, setItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [totalPrice, setTotalPrice] = useState(0);
+  const [darkModeEnabled, setDarkModeEnabled] = useState(true); // Por defecto, modo oscuro
+
+  // Obtener el usuario autenticado
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  // Recuperar la preferencia de modo claro/oscuro desde AsyncStorage
+  useEffect(() => {
+    const getDarkModePreference = async () => {
+      try {
+        const savedDarkMode = await AsyncStorage.getItem('darkMode');
+        if (savedDarkMode !== null) {
+          setDarkModeEnabled(JSON.parse(savedDarkMode));
+        }
+      } catch (error) {
+        console.error('Error al recuperar el modo oscuro/claro: ', error);
+      }
+    };
+
+    getDarkModePreference();
+  }, []);
+
+  useEffect(() => {
+    const fetchCartItems = async () => {
+      if (!user) {
+        Alert.alert('Error', 'El usuario no está autenticado.');
+        return;
+      }
+
+      setIsLoading(true);
+
+      try {
+        // Utiliza el uid del usuario autenticado para obtener su carrito único
+        const cartRef = doc(db, 'cart', user.uid);
+        const cartSnap = await getDoc(cartRef);
+
+        if (cartSnap.exists()) {
+          const cartData = cartSnap.data().items || [];
+
+          // Cargar detalles de los productos desde 'Sliders'
+          const fetchedItems = await Promise.all(
+            cartData.map(async (cartItem) => {
+              const productRef = doc(db, 'Sliders', cartItem.productId);
+              const productSnap = await getDoc(productRef);
+              if (productSnap.exists()) {
+                return { ...productSnap.data(), quantity: cartItem.quantity };
+              }
+            })
+          );
+
+          setItems(fetchedItems);
+
+          // Calcular el precio total
+          const total = fetchedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+          setTotalPrice(total);
+        } else {
+          setItems([]);
+          setTotalPrice(0);
+        }
+      } catch (error) {
+        console.error("Error fetching cart items:", error);
+        Alert.alert('Error', 'Hubo un problema al obtener los productos del carrito.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCartItems();
+  }, [user]);
+
+  const handleDelete = async (index) => {
+    if (!user) {
+      Alert.alert('Error', 'El usuario no está autenticado.');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const cartRef = doc(db, 'cart', user.uid);
+      const cartSnap = await getDoc(cartRef);
+
+      if (cartSnap.exists()) {
+        const currentCart = cartSnap.data().items || [];
+        currentCart.splice(index, 1); // Eliminar el producto del carrito
+        await setDoc(cartRef, { items: currentCart });
+        setItems(currentCart);
+
+        const updatedItems = currentCart.map(async (cartItem) => {
+          const productRef = doc(db, 'Sliders', cartItem.productId);
+          const productSnap = await getDoc(productRef);
+          return { ...productSnap.data(), quantity: cartItem.quantity };
+        });
+        const newTotal = (await Promise.all(updatedItems)).reduce((sum, item) => sum + item.price * item.quantity, 0);
+        setTotalPrice(newTotal);
+      }
+
+      Alert.alert('Éxito', 'El producto fue eliminado exitosamente.');
+    } catch (error) {
+      console.error("Error al eliminar del carrito:", error);
+      Alert.alert('Error', 'Hubo un problema al eliminar el producto del carrito.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCheckout = () => {
+    const phoneNumber = '+542944693478'; // Reemplaza con tu número de teléfono
+    const orderSummary = items.map(item => `Producto: ${item.name} - Cantidad: ${item.quantity} - Subtotal: $${item.price * item.quantity}`).join('\n');
+    const message = `Hola, me gustaría realizar el siguiente pedido:\n\n${orderSummary}\n\nPrecio Total: $${totalPrice}`;
+    
+    const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+
+    // Abrir WhatsApp con el mensaje preformateado
+    Linking.openURL(url).catch(() => {
+      Alert.alert('Error', 'No se pudo abrir WhatsApp.');
+    });
+  };
+
+  return (
+    <View style={[styles.container, darkModeEnabled ? styles.darkContainer : styles.lightContainer]}>
+      {isLoading ? (
+        <ActivityIndicator size="large" color="#8B6A60" />
+      ) : (
+        <FlatList
+          contentContainerStyle={styles.scrollViewContent}
+          data={items}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={({ item, index }) => (
+            <View style={[styles.cartItem, darkModeEnabled ? styles.darkCartItem : styles.lightCartItem]}>
+              <Image source={{ uri: item.imageUrl }} style={styles.productImage} />
+              <View style={styles.productDetails}>
+                <Text style={[styles.productName, darkModeEnabled ? styles.darkText : styles.lightText]}>{item.name}</Text>
+                <Text style={[styles.productPrice, darkModeEnabled ? styles.darkText : styles.lightText]}>Cantidad: {item.quantity}</Text>
+                <Text style={[styles.productPrice, darkModeEnabled ? styles.darkText : styles.lightText]}>Precio Unitario: ${item.price}</Text>
+                <Text style={[styles.productPrice, darkModeEnabled ? styles.darkText : styles.lightText]}>Subtotal: ${item.price * item.quantity}</Text>
+                <TouchableOpacity style={styles.deleteButton} onPress={() => handleDelete(index)}>
+                  <Text style={styles.deleteButtonText}>Eliminar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        />
+      )}
+      <View style={[styles.fixedButtonContainer, darkModeEnabled ? styles.darkFixedButtonContainer : styles.lightFixedButtonContainer]}>
+        <View style={styles.totalContainer}>
+          <Text style={[styles.totalText, darkModeEnabled ? styles.darkText : styles.lightText]}>Precio Total:</Text>
+          <Text style={[styles.totalPrice, darkModeEnabled ? styles.darkText : styles.lightText]}>${totalPrice}</Text>
+        </View>
+        <TouchableOpacity style={styles.purchaseButton} onPress={handleCheckout}>
+          <Text style={styles.purchaseButtonText}>Finalizar Compra</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  darkContainer: {
+    backgroundColor: '#2D2D2D',
+  },
+  lightContainer: {
+    backgroundColor: '#f5f5f5',
+  },
+  scrollViewContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 120, // Espacio para que el contenido no quede oculto bajo el botón fijo
+  },
+  cartItem: {
+    flexDirection: 'row',
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 15,
+    alignItems: 'center',
+  },
+  darkCartItem: {
+    backgroundColor: '#3C3C3C',
+  },
+  lightCartItem: {
+    backgroundColor: '#fff',
+  },
+  productImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+  },
+  productDetails: {
+    flex: 1,
+    marginLeft: 10,
+  },
+  productName: {
+    fontWeight: 'bold',
+  },
+  productPrice: {
+    marginTop: 5,
+  },
+  darkText: {
+    color: '#fff',
+  },
+  lightText: {
+    color: '#333',
+  },
+  deleteButton: {
+    backgroundColor: '#8B6A60',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 10,
+  },
+  deleteButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  fixedButtonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderTopWidth: 1,
+  },
+  darkFixedButtonContainer: {
+    backgroundColor: '#2D2D2D',
+    borderTopColor: '#555',
+  },
+  lightFixedButtonContainer: {
+    backgroundColor: '#fff',
+    borderTopColor: '#ddd',
+  },
+  totalContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+  },
+  totalText: {
+    fontWeight: 'bold',
+  },
+  totalPrice: {
+    fontWeight: 'bold',
+  },
+  purchaseButton: {
+    backgroundColor: '#8B6A60',
+    padding: 15,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  purchaseButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+});
+
+export default Cart;
+
+EditProfile.js:
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { getAuth, updatePassword, updateEmail } from 'firebase/auth'; 
+import { db } from '../config/FireBaseConfig';
+import LoadingScreen from './LoadingScreen'; 
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Importar AsyncStorage
+
+const EditProfile = ({ navigation }) => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [darkModeEnabled, setDarkModeEnabled] = useState(true); // Modo oscuro por defecto
+
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  // Recuperar la preferencia de modo oscuro desde AsyncStorage
+  useEffect(() => {
+    const getDarkModePreference = async () => {
+      try {
+        const savedDarkMode = await AsyncStorage.getItem('darkMode');
+        if (savedDarkMode !== null) {
+          setDarkModeEnabled(JSON.parse(savedDarkMode)); // Convertir a booleano
+        }
+      } catch (error) {
+        console.error('Error al recuperar el modo oscuro/claro: ', error);
+      }
+    };
+
+    getDarkModePreference();
+  }, []);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!user) {
+        Alert.alert('Error', 'El usuario no está autenticado.');
+        return;
+      }
+
+      try {
+        const userRef = doc(db, 'users', user.uid);
+        const userSnap = await getDoc(userRef);
+
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          setName(userData.name || '');
+          setEmail(userData.email || '');
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        Alert.alert('Error', 'Hubo un problema al obtener los datos del usuario.');
+      }
+    };
+
+    fetchUserProfile();
+  }, [user]);
+
+  const handleSaveChanges = async () => {
+    if (password && password !== confirmPassword) {
+      Alert.alert('Error', 'Las contraseñas no coinciden.');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        name,
+        email,
+      });
+
+      if (email !== user.email) {
+        await updateEmail(user, email);
+      }
+
+      if (password) {
+        await updatePassword(user, password);
+        Alert.alert('Éxito', 'Tu perfil y contraseña han sido actualizados.');
+      } else {
+        Alert.alert('Éxito', 'Tu perfil ha sido actualizado.');
+      }
+
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      if (error.code === 'auth/requires-recent-login') {
+        Alert.alert('Error de seguridad', 'Debes volver a iniciar sesión para cambiar tu correo electrónico o contraseña.');
+      } else {
+        Alert.alert('Error', 'Hubo un problema al actualizar tu perfil.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return <LoadingScreen message="Guardando cambios..." />;
+  }
+
+  // Estilos dinámicos según el modo claro/oscuro
+  const dynamicStyles = darkModeEnabled ? styles.darkMode : styles.lightMode;
+
+  return (
+    <View style={[styles.container, dynamicStyles.container]}>
+      <TouchableOpacity style={styles.homeButton} onPress={() => navigation.navigate('Home')}>
+        <Ionicons name="arrow-back-outline" size={24} color="#fff" />
+      </TouchableOpacity>
+
+      <Text style={dynamicStyles.title}>Editar Perfil</Text>
+
+      <Text style={dynamicStyles.label}>Nombre</Text>
+      <TextInput
+        style={dynamicStyles.input}
+        placeholder="Ingresa tu nombre"
+        value={name}
+        onChangeText={setName}
+      />
+
+      <Text style={dynamicStyles.label}>Correo Electrónico</Text>
+      <TextInput
+        style={dynamicStyles.input}
+        placeholder="Ingresa tu correo electrónico"
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+      />
+
+      <Text style={dynamicStyles.label}>Contraseña</Text>
+      <TextInput
+        style={dynamicStyles.input}
+        placeholder="Ingresa tu nueva contraseña"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
+
+      <Text style={dynamicStyles.label}>Confirmar Contraseña</Text>
+      <TextInput
+        style={dynamicStyles.input}
+        placeholder="Confirma tu nueva contraseña"
+        value={confirmPassword}
+        onChangeText={setConfirmPassword}
+        secureTextEntry
+      />
+
+      <TouchableOpacity style={dynamicStyles.saveButton} onPress={handleSaveChanges}>
+        <Text style={dynamicStyles.saveButtonText}>Guardar Cambios</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+// Estilos para modo claro y oscuro
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+  },
+  darkMode: {
+    container: {
+      backgroundColor: '#2D2D2D',
+    },
+    title: {
+      color: '#fff',
+      fontSize: 24,
+      fontWeight: 'bold',
+      marginBottom: 20,
+    },
+    label: {
+      color: '#fff',
+      fontSize: 16,
+      marginBottom: 5,
+    },
+    input: {
+      backgroundColor: '#3C3C3C',
+      color: '#fff',
+      padding: 10,
+      borderRadius: 5,
+      marginBottom: 20,
+    },
+    saveButton: {
+      backgroundColor: '#8B6A60',
+      padding: 15,
+      borderRadius: 10,
+      alignItems: 'center',
+    },
+    saveButtonText: {
+      color: '#fff',
+      fontSize: 16,
+      fontWeight: 'bold',
+    },
+  },
+  lightMode: {
+    container: {
+      backgroundColor: '#fff',
+    },
+    title: {
+      color: '#000',
+      fontSize: 24,
+      fontWeight: 'bold',
+      marginBottom: 20,
+    },
+    label: {
+      color: '#000',
+      fontSize: 16,
+      marginBottom: 5,
+    },
+    input: {
+      backgroundColor: '#E0E0E0',
+      color: '#000',
+      padding: 10,
+      borderRadius: 5,
+      marginBottom: 20,
+    },
+    saveButton: {
+      backgroundColor: '#8B6A60',
+      padding: 15,
+      borderRadius: 10,
+      alignItems: 'center',
+    },
+    saveButtonText: {
+      color: '#fff',
+      fontSize: 16,
+      fontWeight: 'bold',
+    },
+  },
+});
+
+export default EditProfile;
+
+
+Home.js:
+import React, { useEffect, useState } from 'react';
+import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../config/FireBaseConfig';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
+
+const Home = ({ navigation }) => {
+  const [selectedTab, setSelectedTab] = useState('Popular'); // Pestaña por defecto
+  const [sliderList, setSliderList] = useState([]);
+  const [categoryList, setCategoryList] = useState([]);
+  const [darkModeEnabled, setDarkModeEnabled] = useState(true); // Default oscuro
+
+  // Cargar las categorías desde Firestore
+  useEffect(() => {
+    GetCategories();
+  }, []);
+
+  const GetCategories = async () => {
+    const snapshot = await getDocs(collection(db, 'Categorias'));
+    const categories = [];
+    snapshot.forEach((doc) => {
+      categories.push(doc.data());
+    });
+    setCategoryList(categories);
+  };
+
+  // Función para cargar sliders de una categoría específica
+  const GetSliders = async (category) => {
+    const q = query(collection(db, 'Sliders'), where('category', '==', category)); 
+    const snapshot = await getDocs(q);
+    const sliders = [];
+    snapshot.forEach((doc) => {
+      sliders.push({ ...doc.data(), id: doc.id });
+    });
+    setSliderList(sliders);
+  };
+
+  // Cargar sliders según la categoría seleccionada
+  useEffect(() => {
+    GetSliders(selectedTab);
+  }, [selectedTab]);
+
+  // Recuperar el estado del modo oscuro desde AsyncStorage cada vez que la pantalla sea enfocada
+  useFocusEffect(
+    React.useCallback(() => {
+      const getDarkModePreference = async () => {
+        try {
+          const savedDarkMode = await AsyncStorage.getItem('darkMode');
+          if (savedDarkMode !== null) {
+            setDarkModeEnabled(JSON.parse(savedDarkMode));
+          }
+        } catch (error) {
+          console.error('Error al recuperar el modo oscuro/claro: ', error);
+        }
+      };
+
+      getDarkModePreference();
+    }, [])
+  );
+
+  // Renderizar el contenido de los productos
+  const renderContent = () => {
+    return (
+      <View style={styles.products}>
+        {sliderList.map((item, index) => (
+          <View key={index} style={[styles.productCard, darkModeEnabled ? styles.darkProductCard : styles.lightProductCard]}>
+            <Image
+              style={styles.productImage}
+              source={{ uri: item.imageUrl }}
+            />
+            <Text style={[styles.productName, darkModeEnabled ? styles.darkText : styles.lightText]}>{item.name}</Text>
+            <Text style={[styles.productDesc, darkModeEnabled ? styles.darkText : styles.lightText]}>{item.description}</Text>
+            <Text style={[styles.productPrice, darkModeEnabled ? styles.darkText : styles.lightText]}>${item.price}</Text>
+            <TouchableOpacity
+              style={[styles.cartButton, darkModeEnabled ? styles.darkCartButton : styles.lightCartButton]}
+              onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}
+            >
+              <Text style={darkModeEnabled ? styles.darkCartText : styles.lightCartText}>🛒</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+      </View>
+    );
+  };
+
+  return (
+    <ScrollView style={[styles.container, darkModeEnabled ? styles.darkContainer : styles.lightContainer]}>
+      <View style={[styles.header, darkModeEnabled ? styles.darkHeader : styles.lightHeader]}>
+        <View style={styles.headerTop}>
+          <TouchableOpacity
+            style={[styles.iconButton, !darkModeEnabled && styles.lightIconButton]}
+            onPress={() => navigation.navigate('Settings')}
+          >
+            <Ionicons name="settings-outline" size={24} color={darkModeEnabled ? "black" : "black"} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.iconButton, !darkModeEnabled && styles.lightIconButton]}
+            onPress={() => navigation.navigate('Cart')}
+          >
+            <Ionicons name="cart-outline" size={24} color={darkModeEnabled ? "black" : "black"} />
+          </TouchableOpacity>
+        </View>
+        <Image style={styles.headerImage} source={require('../assets/banner.jpeg')} />
+      </View>
+
+      {/* Renderizado del menú dinámico */}
+      <View style={styles.menu}>
+        {categoryList.map((category, index) => (
+          <TouchableOpacity
+            key={index}
+            style={[styles.menuButton, selectedTab === category.name && styles.activeButton, darkModeEnabled ? styles.darkCategoryButton : styles.lightCategoryButton]}
+            onPress={() => setSelectedTab(category.name)}
+          >
+            <Text style={darkModeEnabled ? styles.darkText : styles.lightText}>{category.name}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {renderContent()}
+    </ScrollView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  darkContainer: {
+    backgroundColor: '#2D2D2D',
+  },
+  lightContainer: {
+    backgroundColor: '#fff',
+  },
+  header: {
+    height: 240,
+    position: 'relative',
+  },
+  darkHeader: {
+    backgroundColor: '#333',
+  },
+  lightHeader: {
+    backgroundColor: '#f5f5f5',
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    marginTop: 50,
+    zIndex: 10,
+  },
+  iconButton: {
+    backgroundColor: '#E6E6E6',
+    padding: 10,
+    borderRadius: 10,
+  },
+  lightIconButton: {
+    backgroundColor: '#fff',
+  },
+  headerImage: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    zIndex: 1,
+  },
+  menu: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  menuButton: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 5,
+    marginHorizontal: 5,
+    alignItems: 'center',
+  },
+  darkCategoryButton: {
+    backgroundColor: '#8B6A60',
+  },
+  lightCategoryButton: {
+    backgroundColor: '#f0f0f0',
+    borderColor: '#ccc',
+    borderWidth: 1,
+  },
+  activeButton: {
+    backgroundColor: '#2D2C2B',
+    borderWidth: 1,
+    borderColor: '#8B6A60',
+  },
+  products: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-around',
+    padding: 10,
+  },
+  productCard: {
+    width: '45%',
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 15,
+  },
+  darkProductCard: {
+    backgroundColor: '#3C3C3C',
+  },
+  lightProductCard: {
+    backgroundColor: '#f9f9f9',
+  },
+  productImage: {
+    width: '100%',
+    height: 150,
+    borderRadius: 10,
+  },
+  productName: {
+    fontWeight: 'bold',
+    marginTop: 10,
+  },
+  darkText: {
+    color: '#fff',
+  },
+  lightText: {
+    color: '#333',
+  },
+  productDesc: {
+    marginTop: 5,
+  },
+  productPrice: {
+    fontWeight: 'bold',
+    marginTop: 5,
+  },
+  cartButton: {
+    marginTop: 10,
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  darkCartButton: {
+    backgroundColor: '#8B6A60',
+  },
+  lightCartButton: {
+    backgroundColor: '#f0f0f0',
+    borderColor: '#ccc',
+    borderWidth: 1,
+  },
+  darkCartText: {
+    color: '#fff',
+  },
+  lightCartText: {
+    color: '#333',
+  },
+});
+
+export default Home;
+
+
+LoadingScreen.js:
+import React from 'react';
+import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
+
+const LoadingScreen = ({ message = 'Cargando...' }) => {
+  return (
+    <View style={styles.container}>
+      <ActivityIndicator size="large" color="#8B6A60" />
+      <Text style={styles.message}>{message}</Text>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#2D2D2D',
+  },
+  message: {
+    marginTop: 20,
+    fontSize: 18,
+    color: '#fff',
+  },
+});
+
+export default LoadingScreen;
+
+
+Login.js:
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../config/FireBaseConfig'; // Asegúrate de que auth esté correctamente configurado
+
+export default function LoginScreen() {
+  const navigation = useNavigation();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  // Definir el correo del administrador
+  const adminEmail = "Admin@gmail.com";
+
+  const handleLogin = () => {
+    
+
+    signInWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        const user = userCredential.user;
+        console.log("Inicio de sesión exitoso:", user); // Muestra el usuario autenticado
+
+        // Verifica si el email del usuario es el del administrador
+        if (email === adminEmail) {
+          console.log("Redirigiendo a AdminHome.js");
+          navigation.navigate('AdminHome'); // Redirige a la pantalla de administrador
+        } else {
+          console.log("Redirigiendo a Home.js");
+          navigation.navigate('Home'); // Redirige a la pantalla de usuario normal
+        }
+      })
+      .catch((error) => {
+        console.error("Error al iniciar sesión:", error); // Muestra el error si ocurre
+        Alert.alert('Error de inicio de sesión', error.message);
+      });
+  };
+
+  return (
+    <View style={styles.container}>
+      <Image 
+        source={require('../assets/logo.jpg')}
+        style={styles.logo}
+      />
+      <Text style={styles.title}>Inicio de sesión</Text>
+      <Text style={styles.subtitle}>
+        Inicia sesión con tu cuenta de <Text style={styles.boldText}>YoSoyTierra</Text>.
+      </Text>
+
+      <TextInput
+        style={styles.input}
+        placeholder="hey@tumail.com"
+        placeholderTextColor="#B6A99A"
+        keyboardType="email-address"
+        value={email}
+        onChangeText={text => setEmail(text)} // Actualiza el valor del email
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Introduce tu contraseña"
+        placeholderTextColor="#B6A99A"
+        secureTextEntry
+        value={password}
+        onChangeText={text => setPassword(text)} // Actualiza el valor de la contraseña
+      />
+
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
+        <Text style={styles.buttonText}>Inicia Sesión</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+        <Text style={styles.registerText}>
+          ¿No tienes cuenta? <Text style={styles.registerLink}>Regístrate</Text>
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#1A1A1A',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  logo: {
+    width: 150,
+    height: 150,
+    marginBottom: 20,
+    borderRadius: 15,
+  },
+  title: {
+    fontSize: 24,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    marginBottom: 30,
+    textAlign: 'center',
+  },
+  boldText: {
+    fontWeight: 'bold',
+  },
+  input: {
+    width: '100%',
+    height: 50,
+    borderColor: '#B6A99A',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    marginBottom: 20,
+    color: '#FFFFFF',
+    backgroundColor: '#333333',
+  },
+  button: {
+    width: '100%',
+    height: 50,
+    backgroundColor: '#8E5B41',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  registerText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+  },
+  registerLink: {
+    color: '#B6A99A',
+    fontWeight: 'bold',
+  },
+});
+
+
+ProductDetail.js:
+import React, { useEffect, useState } from 'react';
+import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { doc, getDoc, setDoc } from 'firebase/firestore'; 
+import { db } from '../config/FireBaseConfig';
+import { getAuth } from 'firebase/auth'; 
+import LoadingScreen from './LoadingScreen';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Para manejar el almacenamiento del modo oscuro
+
+const ProductDetail = ({ route, navigation }) => {
+  const { productId } = route.params; 
+  const [product, setProduct] = useState(null);
+  const [selectedQuantity, setSelectedQuantity] = useState(1);
+  const [isLoading, setIsLoading] = useState(true); 
+  const [darkModeEnabled, setDarkModeEnabled] = useState(true); // Estado para el modo oscuro
+  const maxQuantity = 10;
+  const auth = getAuth(); 
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const productRef = doc(db, 'Sliders', productId); 
+        const productSnap = await getDoc(productRef);
+
+        if (productSnap.exists()) {
+          setProduct(productSnap.data()); 
+        } else {
+          Alert.alert('Error', 'Producto no encontrado');
+        }
+      } catch (error) {
+        console.error("Error fetching product details:", error);
+        Alert.alert('Error', 'Hubo un problema al obtener los detalles del producto');
+      } finally {
+        setIsLoading(false); 
+      }
+    };
+
+    fetchProduct();
+  }, [productId]);
+
+  useEffect(() => {
+    const getDarkModePreference = async () => {
+      try {
+        const savedDarkMode = await AsyncStorage.getItem('darkMode');
+        if (savedDarkMode !== null) {
+          setDarkModeEnabled(JSON.parse(savedDarkMode));
+        }
+      } catch (error) {
+        console.error('Error al recuperar el modo oscuro/claro: ', error);
+      }
+    };
+
+    getDarkModePreference();
+  }, []);
+
+  const handleAddToCart = async () => {
+    setIsLoading(true);
+
+    try {
+      const user = auth.currentUser; 
+      if (!user) {
+        Alert.alert('Error', 'Debes iniciar sesión para agregar productos al carrito.');
+        setIsLoading(false);
+        return;
+      }
+
+      const uid = user.uid; 
+
+      const cartRef = doc(db, 'cart', uid); 
+      const cartSnap = await getDoc(cartRef);
+
+      if (cartSnap.exists()) {
+        const existingCart = cartSnap.data().items || [];
+        const newCart = [...existingCart, { productId, quantity: selectedQuantity }];
+        await setDoc(cartRef, { items: newCart });
+      } else {
+        await setDoc(cartRef, { items: [{ productId, quantity: selectedQuantity }] });
+      }
+
+      Alert.alert('Éxito', 'Producto agregado al carrito exitosamente.');
+    } catch (error) {
+      console.error("Error al agregar al carrito:", error);
+      Alert.alert('Error', 'Hubo un problema al agregar el producto al carrito.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return <LoadingScreen message="Cargando detalles del producto..." />;
+  }
+
+  if (!product) {
+    return null;
+  }
+
+  return (
+    <View style={[styles.container, darkModeEnabled ? styles.darkContainer : styles.lightContainer]}>
+      <Image
+        source={{ uri: product.imageUrl }} 
+        style={styles.productImage}
+      />
+      <View style={styles.backAndCartContainer}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
+          <Ionicons name="chevron-back-outline" size={24} color="black" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Cart')}>
+          <Ionicons name="cart-outline" size={24} color="black" />
+        </TouchableOpacity>
+      </View>
+      <View style={[styles.detailsContainer, darkModeEnabled ? styles.darkDetailsContainer : styles.lightDetailsContainer]}>
+        <Text style={[styles.productName, darkModeEnabled ? styles.darkText : styles.lightText]}>{product.name}</Text>
+        <Text style={[styles.productDescription, darkModeEnabled ? styles.darkText : styles.lightText]}>{product.description}</Text>
+        <Text style={[styles.sectionTitle, darkModeEnabled ? styles.darkText : styles.lightText]}>Cantidad</Text>
+        <View style={styles.quantityContainer}>
+          {[...Array(maxQuantity)].map((_, index) => (
+            <TouchableOpacity
+              key={index + 1}
+              style={[
+                styles.quantityButton,
+                selectedQuantity === index + 1 && styles.selectedQuantityButton,
+                darkModeEnabled ? styles.darkQuantityButton : styles.lightQuantityButton
+              ]}
+              onPress={() => setSelectedQuantity(index + 1)}
+            >
+              <Text
+                style={[
+                  styles.quantityText,
+                  selectedQuantity === index + 1 && styles.selectedQuantityText,
+                  darkModeEnabled ? styles.darkText : styles.lightText
+                ]}
+              >
+                {index + 1}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <Text style={[styles.productInfo, darkModeEnabled ? styles.darkText : styles.lightText]}>
+          {product.about}
+        </Text>
+        <Text style={[styles.totalPrice, darkModeEnabled ? styles.darkText : styles.lightText]}>
+          Precio Total: ${product.price * selectedQuantity}
+        </Text>
+        <TouchableOpacity style={[styles.addToCartButton, darkModeEnabled ? styles.darkCartButton : styles.lightCartButton]} onPress={handleAddToCart}>
+          <Text style={darkModeEnabled ? styles.darkCartText : styles.lightCartText}>Agregar al Carrito</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  darkContainer: {
+    backgroundColor: '#1B1B1B',
+  },
+  lightContainer: {
+    backgroundColor: '#FFFFFF',
+  },
+  productImage: {
+    width: '100%',
+    height: 300,
+  },
+  backAndCartContainer: {
+    position: 'absolute',
+    top: 40,
+    left: 10,
+    right: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 15,
+  },
+  iconButton: {
+    padding: 10,
+    backgroundColor: '#E6E6E6',
+    borderRadius: 10,
+  },
+  detailsContainer: {
+    padding: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    marginTop: -20, 
+  },
+  darkDetailsContainer: {
+    backgroundColor: '#2D2D2D',
+  },
+  lightDetailsContainer: {
+    backgroundColor: '#F5F5F5',
+  },
+  productName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  productDescription: {
+    marginTop: 5,
+    marginBottom: 15,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  quantityContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  quantityButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 5,
+    marginRight: 10,
+    marginBottom: 10,
+  },
+  darkQuantityButton: {
+    backgroundColor: '#3C3C3C',
+  },
+  lightQuantityButton: {
+    backgroundColor: '#E6E6E6',
+  },
+  selectedQuantityButton: {
+    backgroundColor: '#8B6A60',
+  },
+  quantityText: {
+    color: '#fff',
+  },
+  selectedQuantityText: {
+    fontWeight: 'bold',
+  },
+  productInfo: {
+    marginTop: 10,
+    lineHeight: 20,
+  },
+  totalPrice: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 20,
+  },
+  addToCartButton: {
+    padding: 15,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 15,
+  },
+  darkCartButton: {
+    backgroundColor: '#8B6A60',
+  },
+  lightCartButton: {
+    backgroundColor: '#F0F0F0',
+  },
+  darkCartText: {
+    color: '#FFFFFF',
+  },
+  lightCartText: {
+    color: '#333333',
+  },
+  darkText: {
+    color: '#FFFFFF',
+  },
+  lightText: {
+    color: '#333333',
+  },
+});
+
+export default ProductDetail;
+
+
+Register.js:
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { auth, db } from '../config/FireBaseConfig'; // Importa auth correctamente
+import { createUserWithEmailAndPassword } from 'firebase/auth'; 
+import { doc, setDoc } from 'firebase/firestore'; // Importa las funciones necesarias de Firestore
+
+export default function RegisterScreen() {
+  const navigation = useNavigation();
+
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const handleRegister = () => {
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Las contraseñas no coinciden');
+      return;
+    }
+
+    createUserWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        const userId = userCredential.user.uid;
+
+        // Utiliza setDoc para agregar los datos a Firestore
+        setDoc(doc(db, 'users', userId), {
+          name: name,
+          email: email,
+        })
+        .then(() => {
+          Alert.alert('Usuario creado', 'Registro exitoso');
+          navigation.navigate('Login');
+        })
+        .catch((error) => {
+          console.error('Error al guardar en Firestore: ', error);
+        });
+      })
+      .catch((error) => {
+        Alert.alert('Error de registro', error.message);
+      });
+  };
+
+  return (
+    <View style={styles.container}>
+      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+      </TouchableOpacity>
+
+      <Text style={styles.title}>Registro</Text>
+
+      <TextInput
+        style={styles.input}
+        placeholder="Nombre"
+        placeholderTextColor="#B6A99A"
+        onChangeText={text => setName(text)}
+        value={name}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="hey@gmail.com"
+        placeholderTextColor="#B6A99A"
+        keyboardType="email-address"
+        onChangeText={text => setEmail(text)}
+        value={email}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Introduce tu contraseña"
+        placeholderTextColor="#B6A99A"
+        secureTextEntry
+        onChangeText={text => setPassword(text)}
+        value={password}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Confirmar contraseña"
+        placeholderTextColor="#B6A99A"
+        secureTextEntry
+        onChangeText={text => setConfirmPassword(text)}
+        value={confirmPassword}
+      />
+
+      <TouchableOpacity style={styles.button} onPress={handleRegister}>
+        <Text style={styles.buttonText}>Crear Cuenta</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+        <Text style={styles.loginText}>
+          ¿Ya tienes cuenta? <Text style={styles.loginLink}>Inicia Sesión</Text>
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#1A1A1A',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  backButton: {
+    alignSelf: 'flex-start',
+    marginBottom: 20,
+    marginLeft: 10,
+  },
+  title: {
+    fontSize: 24,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    marginBottom: 30,
+  },
+  input: {
+    width: '100%',
+    height: 50,
+    borderColor: '#B6A99A',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    marginBottom: 20,
+    color: '#FFFFFF',
+    backgroundColor: '#333333',
+  },
+  button: {
+    width: '100%',
+    height: 50,
+    backgroundColor: '#8E5B41',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  loginText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+  },
+  loginLink: {
+    color: '#B6A99A',
+    fontWeight: 'bold',
+  },
+});
+
+
+Settings.js:
+import React, { useEffect } from 'react';
+import { View, Text, TouchableOpacity, Switch, StyleSheet, ScrollView, Linking, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { auth } from '../config/FireBaseConfig'; // Asegúrate de importar 'auth' correctamente
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const Settings = ({ navigation }) => {
+  const [notificationsEnabled, setNotificationsEnabled] = React.useState(false);
+  const [darkModeEnabled, setDarkModeEnabled] = React.useState(true); // Default oscuro
+
+  // Recuperar el estado de dark mode desde AsyncStorage al cargar la vista
+  useEffect(() => {
+    const getDarkModePreference = async () => {
+      try {
+        const savedDarkMode = await AsyncStorage.getItem('darkMode');
+        if (savedDarkMode !== null) {
+          setDarkModeEnabled(JSON.parse(savedDarkMode)); // Convertir a booleano
+        }
+      } catch (error) {
+        console.error('Error al recuperar el modo oscuro/claro: ', error);
+      }
+    };
+
+    getDarkModePreference(); // Llamar a la función para recuperar el valor al montar el componente
+  }, []);
+
+  const handleContactUs = () => {
+    const phoneNumber = '+542944693478'; // Reemplaza con el número de teléfono deseado
+    const url = `https://wa.me/${phoneNumber}?text=Necesito Asesoramiento`;
+
+    Linking.openURL(url).catch((err) => console.error('Error al abrir WhatsApp', err));
+  };
+
+  const handleInstagram = () => {
+    const url = `https://www.instagram.com/yosoytierra_patagonia/`;
+
+    Linking.openURL(url).catch((err) => console.error('Error al abrir Instagram', err));
+  };
+
+  // Función para cerrar sesión utilizando auth de Firebase
+  const handleSignOut = () => {
+    auth.signOut()
+      .then(() => {
+        Alert.alert('Cierre de sesión', 'Has cerrado sesión correctamente');
+        navigation.replace('Login'); // Redirige al usuario a la pantalla de inicio de sesión
+      })
+      .catch((error) => {
+        console.error('Error al cerrar sesión: ', error);
+        Alert.alert('Error', 'No se pudo cerrar la sesión. Inténtalo de nuevo.');
+      });
+  };
+
+  // Manejar el cambio de modo claro/oscuro y guardar en AsyncStorage
+  const toggleDarkMode = async (value) => {
+    try {
+      setDarkModeEnabled(value);
+      await AsyncStorage.setItem('darkMode', JSON.stringify(value)); // Guardar valor como string
+    } catch (error) {
+      console.error('Error al guardar el modo oscuro/claro: ', error);
+    }
+  };
+
+  // Estilos dinámicos basados en el modo claro/oscuro
+  const dynamicStyles = darkModeEnabled ? styles.darkMode : styles.lightMode;
+
+  return (
+    <View style={[styles.container, dynamicStyles.container]}>
+      <ScrollView>
+        {/* Sección de Cuenta */}
+        <View style={styles.section}>
+          <Text style={dynamicStyles.sectionTitle}>Cuenta</Text>
+          <TouchableOpacity style={[styles.optionButton, dynamicStyles.optionButton]} onPress={() => navigation.navigate('EditProfile')}>
+            <Ionicons name="person-circle-outline" size={24} color={darkModeEnabled ? "#8B6A60" : "#000"} />
+            <Text style={dynamicStyles.optionText}>Editar Perfil</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Sección de Preferencias */}
+        <View style={styles.section}>
+          <Text style={dynamicStyles.sectionTitle}>Preferencias</Text>
+          <View style={[styles.optionButton, dynamicStyles.optionButton]}>
+            <Ionicons name="notifications-outline" size={24} color={darkModeEnabled ? "#8B6A60" : "#000"} />
+            <Text style={dynamicStyles.optionText}>Notificaciones</Text>
+            <Switch
+              value={notificationsEnabled}
+              onValueChange={(value) => setNotificationsEnabled(value)}
+              thumbColor={notificationsEnabled ? "#8B6A60" : "#aaa"}
+            />
+          </View>
+          <View style={[styles.optionButton, dynamicStyles.optionButton]}>
+            <Ionicons name="moon-outline" size={24} color={darkModeEnabled ? "#8B6A60" : "#000"} />
+            <Text style={dynamicStyles.optionText}>{darkModeEnabled ? 'Modo Claro' : 'Modo Oscuro'}</Text>
+            <Switch
+              value={!darkModeEnabled} // Invertir para que al estar apagado sea oscuro
+              onValueChange={(value) => toggleDarkMode(!darkModeEnabled)}
+              thumbColor={!darkModeEnabled ? "#8B6A60" : "#aaa"}
+            />
+          </View>
+        </View>
+
+        {/* Sección de Soporte */}
+        <View style={styles.section}>
+          <Text style={dynamicStyles.sectionTitle}>Soporte</Text>
+          <TouchableOpacity style={[styles.optionButton, dynamicStyles.optionButton]} onPress={handleContactUs}>
+            <Ionicons name="chatbubble-outline" size={24} color={darkModeEnabled ? "#8B6A60" : "#000"} />
+            <Text style={dynamicStyles.optionText}>Contáctanos - WhatsApp</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.optionButton, dynamicStyles.optionButton]} onPress={handleInstagram}>
+            <Ionicons name="logo-instagram" size={24} color={darkModeEnabled ? "#8B6A60" : "#000"} />
+            <Text style={dynamicStyles.optionText}>Contáctanos - Instagram</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Sección de Cierre de Sesión */}
+        <View style={[styles.section, { borderBottomWidth: 0 }]}>
+          <TouchableOpacity style={[styles.optionButton, dynamicStyles.optionButton]} onPress={handleSignOut}>
+            <Ionicons name="log-out-outline" size={24} color={darkModeEnabled ? "#8B6A60" : "red"} />
+            <Text style={[dynamicStyles.optionText, { color: 'red' }]}>Cerrar Sesión</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </View>
+  );
+};
+
+// Estilos para modo claro y oscuro
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingTop: 40,
+  },
+  section: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#555',
+  },
+  optionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  // Estilos de modo oscuro
+  darkMode: {
+    container: {
+      backgroundColor: '#2D2D2D',
+    },
+    sectionTitle: {
+      color: '#fff',
+      fontSize: 18,
+      fontWeight: 'bold',
+      marginBottom: 10,
+    },
+    optionText: {
+      color: '#fff',
+      fontSize: 16,
+      marginLeft: 15,
+      flex: 1,
+    },
+    optionButton: {
+      backgroundColor: '#3C3C3C', // Fondo oscuro para los botones en modo oscuro
+    },
+  },
+  // Estilos de modo claro
+  lightMode: {
+    container: {
+      backgroundColor: '#fff',
+    },
+    sectionTitle: {
+      color: '#000',
+      fontSize: 18,
+      fontWeight: 'bold',
+      marginBottom: 10,
+    },
+    optionText: {
+      color: '#000',
+      fontSize: 16,
+      marginLeft: 15,
+      flex: 1,
+    },
+    optionButton: {
+      backgroundColor: '#E0E0E0', // Fondo claro para los botones en modo claro
+    },
+  },
+});
+
+export default Settings;
+
+
+y hay mas cosas que te voy a ir pasando despues
